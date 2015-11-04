@@ -30,12 +30,12 @@ import javafx.stage.WindowEvent;
 
 public class Netflix extends Application {
 
-    public static NetflixRoulette nflxr        = new NetflixRoulette();
-    public static String          netflixTitle = null,
-                                          netflixDesc = null, voting = "";
+    public static NetflixRoulette nflxr       = new NetflixRoulette();
+    public static String          netflixTitle = null;
+    public static String          netflixDesc = null;
+    public static String          voting      = "";
 
-    public static void main(String[] args)
-            throws UnknownHostException, IOException {
+    public static void main(String[] args) throws UnknownHostException, IOException {
         IRC irc = new IRC();
         new Thread(irc).start();
         setNewNetflix("Trailer Park Boys");
@@ -46,9 +46,8 @@ public class Netflix extends Application {
         netflixTitle = netflix;
         try {
             netflixTitle += " (" + nflxr.getMediaReleaseYear(netflix) + ") ("
-                    + nflxr.getMediaRating(netflix) + " Rating)";
-            netflixDesc = nflxr.getMediaSummary(netflix) + "\nActors: "
-                    + nflxr.getMediaCast(netflix);
+                         + nflxr.getMediaRating(netflix) + " Rating)";
+            netflixDesc = nflxr.getMediaSummary(netflix) + "\nActors: " + nflxr.getMediaCast(netflix);
         } catch (JSONException e) {
             System.out.println("Unknown Error.");
         } catch (IOException e) {
@@ -102,7 +101,7 @@ public class Netflix extends Application {
 
         new Thread() {
             public void run() {
-                while (true) {                    
+                while (true) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -118,21 +117,21 @@ public class Netflix extends Application {
                             map.put(value, 1);
                         }
                     }
-                    
+
                     String[][] array = new String[5][2];
-                    
+
                     int counter = 0;
-                    for(String value : map.keySet()) {                        
-                        if(counter < 5) {
+                    for (String value : map.keySet()) {
+                        if (counter < 5) {
                             array[counter][0] = value;
                             array[counter][1] = Integer.toString(map.get(value));
                             counter++;
                         } else {
-                            for(int i = 0; i < array.length; i++) {
-                                if(Integer.parseInt(array[i][1]) < map.get(value)) {
-                                    for(int y = array.length - 1; y > i + 1; y--) {
-                                        array[y][0] = array[y-1][0];
-                                        array[y][1] = array[y-1][1];
+                            for (int i = 0; i < array.length; i++) {
+                                if (Integer.parseInt(array[i][1]) < map.get(value)) {
+                                    for (int y = array.length - 1; y > i + 1; y--) {
+                                        array[y][0] = array[y - 1][0];
+                                        array[y][1] = array[y - 1][1];
                                     }
                                     array[i][0] = value;
                                     array[i][1] = Integer.toString(map.get(value));
@@ -141,9 +140,9 @@ public class Netflix extends Application {
                             }
                         }
                     }
-                    
+
                     voting = "";
-                    for(int z = 0; z < array.length; z++) {
+                    for (int z = 0; z < array.length; z++) {
                         voting += array[z][0] + ": " + array[z][1] + "\n";
                     }
 
