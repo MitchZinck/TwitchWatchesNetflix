@@ -14,25 +14,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class IRC implements Runnable {
 
-    private final int           TWITCH_PORT = 6667;
-    private final String        SERVER      = "irc.twitch.tv";
-    private final String        NICK        = "aksui";
-    private final String        OAUTH       = "adiammdnw0vkapzd59o2wmbu4twb0h";
+    private final int                 TWITCH_PORT = 6667;
+    private final String              SERVER      = "irc.twitch.tv";
+    private final String              NICK        = "aksui";
+    private final String              OAUTH       = "adiammdnw0vkapzd59o2wmbu4twb0h";
 
-    private String[]            split;
+    private String[]                  split;
 
     public static Map<String, String> map;
 
-    private Socket              socket;
-    private InputStream         is;
-    private OutputStream        os;
-    private InputStreamReader   inputStreamReader;
-    private OutputStreamWriter  outputStreamWriter;
-    private BufferedReader      read;
-    private BufferedWriter      writer;
+    private Socket                    socket;
+    private InputStream               is;
+    private OutputStream              os;
+    private InputStreamReader         inputStreamReader;
+    private OutputStreamWriter        outputStreamWriter;
+    private BufferedReader            read;
+    private BufferedWriter            writer;
 
     public IRC() {
-        
+
     }
 
     public void writeLine(String msg) {
@@ -59,7 +59,7 @@ public class IRC implements Runnable {
     public void run() {
         try {
             map = new ConcurrentHashMap<String, String>();
-            
+
             System.out.print("Connecting to twitch servers.");
             socket = new Socket(SERVER, TWITCH_PORT);
             is = socket.getInputStream();
@@ -78,14 +78,14 @@ public class IRC implements Runnable {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        
+
         boolean connected = false;
         while (true) {
             String line = null;
             try {
                 Thread.sleep(100);
                 line = read.readLine();
-                if(line.contains("366")) {
+                if (line.contains("366")) {
                     connected = true;
                     System.out.println("");
                     continue;
@@ -101,14 +101,14 @@ public class IRC implements Runnable {
             if (line != null && connected == true) {
                 split = line.split(":");
                 map.put(split[1].split("!")[0], split[split.length - 1]);
-               // map.put(split[split.length - 1].split("\\.")[0], split[split.length - 1].split("\\.")[1]);
-                
-            } else if(line == null) {
+                // map.put(split[split.length - 1].split("\\.")[0], split[split.length - 1].split("\\.")[1]);
+
+            } else if (line == null) {
                 System.out.println("Recieveing NULL. Error.");
             } else {
                 System.out.print(".");
             }
-        }        
+        }
     }
 
 }

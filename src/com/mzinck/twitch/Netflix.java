@@ -30,10 +30,10 @@ import javafx.stage.WindowEvent;
 
 public class Netflix extends Application {
 
-    public static NetflixRoulette nflxr       = new NetflixRoulette();
+    public static NetflixRoulette nflxr        = new NetflixRoulette();
     public static String          netflixTitle = null;
-    public static String          netflixDesc = null;
-    public static String          voting      = "";
+    public static String          netflixDesc  = null;
+    public static String          voting       = "";
 
     public static void main(String[] args) throws UnknownHostException, IOException {
         IRC irc = new IRC();
@@ -45,8 +45,7 @@ public class Netflix extends Application {
     public static void setNewNetflix(String netflix) {
         netflixTitle = netflix;
         try {
-            netflixTitle += " (" + nflxr.getMediaReleaseYear(netflix) + ") ("
-                         + nflxr.getMediaRating(netflix) + " Rating)";
+            netflixTitle += " (" + nflxr.getMediaReleaseYear(netflix) + ") (" + nflxr.getMediaRating(netflix) + " Rating)";
             netflixDesc = nflxr.getMediaSummary(netflix) + "\nActors: " + nflxr.getMediaCast(netflix);
         } catch (JSONException e) {
             System.out.println("Unknown Error.");
@@ -82,8 +81,7 @@ public class Netflix extends Application {
         GridPane.setHalignment(nfDesc, HPos.LEFT);
         grid.add(nfDesc, 1, 1);
 
-        Image img = new Image(
-                "file:C:\\Users\\mitchell\\Desktop\\60032563.jpg");
+        Image img = new Image("file:C:\\Users\\mitchell\\Desktop\\60032563.jpg");
         ImageView imgView = new ImageView(img);
         grid.add(imgView, 0, 0, 1, 2);
 
