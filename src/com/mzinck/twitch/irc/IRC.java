@@ -16,8 +16,8 @@ public class IRC implements Runnable {
 
     private final int                 TWITCH_PORT = 6667;
     private final String              SERVER      = "irc.twitch.tv";
-    private final String              NICK        = "aksui";
-    private final String              OAUTH       = "adiammdnw0vkapzd59o2wmbu4twb0h";
+    private final String              NICK        = "mitchzinck";
+    private final String              OAUTH       = "uk0ysbaynvon911vfd0oxy6r6o6tl2";
 
     private String[]                  split;
 
@@ -32,7 +32,7 @@ public class IRC implements Runnable {
     private BufferedWriter            writer;
 
     public IRC() {
-
+  
     }
 
     public void writeLine(String msg) {
@@ -73,7 +73,7 @@ public class IRC implements Runnable {
 
             writeLine("PASS oauth:" + OAUTH);
             writeLine("NICK " + NICK);
-            writeLine("JOIN #bobross");
+            writeLine("JOIN #mitchzinck");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -98,7 +98,8 @@ public class IRC implements Runnable {
                 e.printStackTrace();
             }
 
-            if (line != null && connected == true) {
+            if (line != null && connected == true && line.contains("!vote")) {
+                line = line.replace("!vote ", "");
                 split = line.split(":");
                 map.put(split[1].split("!")[0], split[split.length - 1]);
                 // map.put(split[split.length - 1].split("\\.")[0], split[split.length - 1].split("\\.")[1]);
