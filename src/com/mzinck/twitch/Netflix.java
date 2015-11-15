@@ -1,7 +1,6 @@
 package com.mzinck.twitch;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -10,10 +9,8 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import org.json.JSONException;
-
 import com.mzinck.twitch.irc.IRC;
-import com.net.codeusa.NetflixRoulette;
+import com.mzinck.twitch.json.ApiReader;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -36,17 +33,16 @@ import javafx.stage.WindowEvent;
 
 public class Netflix extends Application {
 
-    public static NetflixRoulette nflxr       = new NetflixRoulette();
-    public static Image           poster      = null;
-    public static String          nft         = null;
-    public static String          netflixDesc = null;
-    public static String          title       = null;
+    public static Image  poster      = null;
+    public static String nft         = null;
+    public static String netflixDesc = null;
+    public static String title       = null;
+    public static int    countdown   = 0;
+    public static State  state       = State.VOTING;
     
-    public State                  state       = State.VOTING;
-    public String                 voting      = "";
-    public String                 topVote     = "";
-    public int                    countdown   = 0;
-    public int                    timestamp   = 0;
+    public String        voting      = "";
+    public String        topVote     = "";
+    public int           timestamp   = 0;
 
     public static void main(String[] args) throws UnknownHostException, IOException {
         IRC irc = new IRC();
@@ -56,25 +52,20 @@ public class Netflix extends Application {
     }
 
     public static void setNewNetflix(String netflix) {
+        Map<String, String> nflx = ApiReader.netflixInfo(netflix.replace(" ", "+"));
         nft = netflix;
         title = netflix;
+        nft += " (" + nflx.get("Released") + ") (" + nflx.get("imdbRating") + " Rating)";
+        netflixDesc = nflx.get("Plot") + "\nActors: " + nflx.get("Actors");
+        
+        BufferedImage image;
+        URL url = null;
         try {
-            nft += " (" + nflxr.getMediaReleaseYear(netflix) + ") (" + nflxr.getMediaRating(netflix) + " Rating)";
-            netflixDesc = nflxr.getMediaSummary(netflix) + "\nActors: " + nflxr.getMediaCast(netflix);
-            
-            BufferedImage image;
-            URL url = null;
-            try {
-                url = new URL(nflxr.getMediaPoster(netflix));
-                image = ImageIO.read(url);
-                setImage(image);
-            } catch (IOException e) {
-                
-            }           
-        } catch (JSONException e) {
-            System.out.println("Unknown Error.");
+            url = new URL(nflx.get("Poster"));
+            image = ImageIO.read(url);
+            setImage(image);
         } catch (IOException e) {
-            System.out.println("Unknown movie try again.");
+            
         }
     }
     
@@ -107,8 +98,7 @@ public class Netflix extends Application {
 
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_LEFT);
-        grid.setHgap(50);
-        grid.setVgap(10);
+        grid.setHgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         Text nfTitle = new Text(nft);
@@ -123,12 +113,12 @@ public class Netflix extends Application {
         grid.add(nfDesc, 1, 1);
         
         Label voteLabel= new Label("");
-        voteLabel.setFont(Font.font("Roboto", FontWeight.NORMAL, 12));
+        voteLabel.setFont(Font.font("Roboto", FontWeight.NORMAL, 24));
         GridPane.setHalignment(voteLabel, HPos.LEFT);
         grid.add(voteLabel, 0, 2);
         
         Label cdTimer= new Label("Vote Timer: ");
-        cdTimer.setFont(Font.font("Roboto", FontWeight.NORMAL, 12));
+        cdTimer.setFont(Font.font("Roboto", FontWeight.NORMAL, 24));
         GridPane.setHalignment(cdTimer, HPos.LEFT);
         grid.add(cdTimer, 1, 2);
 
@@ -155,19 +145,18 @@ public class Netflix extends Application {
                         
                         
                         case PLAYING:
-                            String s = null;
-                            try {
-                                s = nflxr.getAllData(title);
-                            } catch (JSONException e1) {
-                                // TODO Auto-generated catch block
-                                e1.printStackTrace();
-                            } catch (IOException e1) {
+                            countdown = 0;
+                            timestamp = 0;
+                            String rt = null;
+                            rt = ApiReader.netflixInfo(title.replace(" ", "+")).get("Runtime");
+                            
+                            if(!netflixDesc.contains("null")) {
+                                countdown = Integer.parseInt(rt.substring(0, 2).replace(" ", "")) * 60;
+                            } else {
                                 state = com.mzinck.twitch.State.VOTING;
+                                countdown = 1;
                                 break;
                             }
-                            s = s.substring(s.indexOf("runtime\":\"") + 10, s.indexOf("runtime\":\"") + 13);
-                            s = s.replace(" ", "");
-                            countdown = Integer.parseInt(s) * 100;
                             while(countdown > 0) {
                                 try {
                                     Thread.sleep(1000);
@@ -189,9 +178,9 @@ public class Netflix extends Application {
                         break;
 
                         case VOTING:
+                            countdown = 60;
                             new Thread() {
                                 public void run() {
-                                    countdown = 10;
                                     topVote = "";
                                     IRC.map.clear();
                                     while (countdown > 0) {
@@ -204,10 +193,10 @@ public class Netflix extends Application {
 
                                         Map<String, Integer> map = new HashMap<String, Integer>();
                                         for (String value : IRC.map.values()) {
-                                            if (map.containsKey(value)) {
+                                            if (map.containsKey(value.toUpperCase())) {
                                                 map.put(value, map.get(value) + 1);
                                             } else {
-                                                map.put(value, 1);
+                                                map.put(value.toUpperCase(), 1);
                                             }
                                         }
 
@@ -234,25 +223,28 @@ public class Netflix extends Application {
                                             }
                                         }
 
-                                        voting = "<h1>VOTING IN PROGRESS</h1>\n";
-                                        for (int z = 0; z < array.length; z++) {
-                                            if(array[z][0] != null) {
-                                                topVote = array[z][0];
-                                            }                                            
-                                            voting += array[z][0] + ": " + array[z][1] + "\n";
+                                        voting = "VOTING IN PROGRESS\n";
+                                        for (int z = 0; z < array.length; z++) { 
+                                            if(array[z][0] != null && !array[z][0].contains("null")) {
+                                                voting += array[z][0] + ": " + array[z][1] + "\n";
+                                            }
                                         }
+                                        topVote = array[0][0];  
 
                                         Platform.runLater(new Runnable() {
                                             public void run() {
                                                 voteLabel.setText(voting);
-                                                cdTimer.setText("Vote Time: " + countdown);
+                                                cdTimer.setText("Vote Time: " + countdown + "\nType \"!vote (yourpreferencehere)");
                                             }
                                         });
                                         
                                         countdown--;
                                     }
                                     System.out.println("Votes have been tallied: " + topVote + " = Winner");
-                                    
+                                    voting = "PREVIOUS VOTE" + voting.replace("VOTING IN PROGRESS\n", "\n");
+                                    if(topVote == null) {
+                                        topVote = "null";
+                                    }
                                     setNewNetflix(topVote);
                                     state = com.mzinck.twitch.State.PLAYING;
                                     
@@ -261,6 +253,7 @@ public class Netflix extends Application {
                                             nfTitle.setText(nft);
                                             nfDesc.setText(netflixDesc);
                                             nfPoster.setImage(poster);
+                                            
                                         }
                                     });                                    
                                 }
@@ -270,7 +263,7 @@ public class Netflix extends Application {
                     }
                     
                     try {
-                        Thread.sleep(11000);
+                        Thread.sleep(countdown * 1100);
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -278,6 +271,10 @@ public class Netflix extends Application {
                 }
             }
         }.start();                 
+    }
+    
+    public static void setTime(int time) {
+        countdown = time * 60;
     }
 
 }

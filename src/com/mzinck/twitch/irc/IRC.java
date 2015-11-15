@@ -12,12 +12,16 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.mzinck.twitch.Netflix;
+import com.mzinck.twitch.State;
+
 public class IRC implements Runnable {
 
     private final int                 TWITCH_PORT = 6667;
     private final String              SERVER      = "irc.twitch.tv";
     private final String              NICK        = "mitchzinck";
     private final String              OAUTH       = "uk0ysbaynvon911vfd0oxy6r6o6tl2";
+    private final String[]            modList     = new String[] { "mitchzinck" };
 
     private String[]                  split;
 
@@ -102,10 +106,17 @@ public class IRC implements Runnable {
                 line = line.replace("!vote ", "");
                 split = line.split(":");
                 map.put(split[1].split("!")[0], split[split.length - 1]);
-                // map.put(split[split.length - 1].split("\\.")[0], split[split.length - 1].split("\\.")[1]);
-
-            } else if (line == null) {
-                System.out.println("Recieveing NULL. Error.");
+            } else if(connected == true && line != null && (line.contains("!setTime") || line.contains("!newVote"))) {
+                for(String s : modList) {
+                    if(line.contains(s)) {
+                        if(line.contains("!setTime")) {
+                            Netflix.setTime(Integer.parseInt(line.substring(line.indexOf("{") + 1, line.indexOf("}"))));
+                        } else {
+                            Netflix.state = State.VOTING;
+                            Netflix.countdown = 2;
+                        }
+                    }
+                }
             } else {
                 System.out.print(".");
             }
