@@ -33,16 +33,19 @@ import javafx.stage.WindowEvent;
 
 public class Netflix extends Application {
 
-    public static Image  poster      = null;
-    public static String nft         = null;
-    public static String netflixDesc = null;
-    public static String title       = null;
-    public static int    countdown   = 0;
-    public static State  state       = State.VOTING;
-    
-    public String        voting      = "";
-    public String        topVote     = "";
-    public int           timestamp   = 0;
+    public static Image   poster      = null;
+    public static String  nft         = null;
+    public static String  netflixDesc = null;
+    public static String  title       = null;
+    public static String  isShow      = "FALSE";
+    public static int     countdown   = 0;
+    public static State   state       = State.VOTING;
+    public static boolean start       = true;
+
+    public String         voting      = "";
+    public String         topVote     = "";
+    public int            timestamp   = 0;
+
 
     public static void main(String[] args) throws UnknownHostException, IOException {
         IRC irc = new IRC();
@@ -57,6 +60,10 @@ public class Netflix extends Application {
         title = netflix;
         nft += " (" + nflx.get("Released") + ") (" + nflx.get("imdbRating") + " Rating)";
         netflixDesc = nflx.get("Plot") + "\nActors: " + nflx.get("Actors");
+        if(start == false && (nflx.get("Type") != null)) {
+            isShow = nflx.get("Type").equals("series") ? "TRUE" : "FALSE";
+        }
+        start = false;
         
         BufferedImage image;
         URL url = null;
@@ -150,11 +157,12 @@ public class Netflix extends Application {
                             String rt = null;
                             rt = ApiReader.netflixInfo(title.replace(" ", "+")).get("Runtime");
                             
-                            if(!netflixDesc.contains("null")) {
+                            if(!nft.contains("null")) {
                                 countdown = Integer.parseInt(rt.substring(0, 2).replace(" ", "")) * 60;
                             } else {
                                 state = com.mzinck.twitch.State.VOTING;
                                 countdown = 1;
+                                isShow = "FALSE";
                                 break;
                             }
                             while(countdown > 0) {
@@ -174,11 +182,12 @@ public class Netflix extends Application {
                                 timestamp++;
                             }
                             
+                            isShow = "FALSE";
                             state = com.mzinck.twitch.State.VOTING;
                         break;
 
                         case VOTING:
-                            countdown = 60;
+                            countdown = 500;
                             new Thread() {
                                 public void run() {
                                     topVote = "";
@@ -193,35 +202,36 @@ public class Netflix extends Application {
 
                                         Map<String, Integer> map = new HashMap<String, Integer>();
                                         for (String value : IRC.map.values()) {
-                                            if (map.containsKey(value.toUpperCase())) {
+                                            if (map.containsKey(value)) {
                                                 map.put(value, map.get(value) + 1);
                                             } else {
-                                                map.put(value.toUpperCase(), 1);
+                                                map.put(value, 1);
                                             }
                                         }
 
-                                        String[][] array = new String[5][2];
+                                        String[][] array = new String[5][2]; //Array of top 5 votes
 
                                         int counter = 0;
                                         for (String value : map.keySet()) {
-                                            if (counter < 5) {
-                                                array[counter][0] = value;
-                                                array[counter][1] = Integer.toString(map.get(value));
+                                            if (counter < 5) { //Wait for first 5 spots to fill up
+                                                array[counter][0] = value; //Add the vote to the first index of the array
+                                                array[counter][1] = Integer.toString(map.get(value)); //Add the vote count to the second index
                                                 counter++;
                                             } else {
-                                                for (int i = 0; i < array.length; i++) {
-                                                    if (Integer.parseInt(array[i][1]) < map.get(value)) {
-                                                        for (int y = array.length - 1; y > i + 1; y--) {
-                                                            array[y][0] = array[y - 1][0];
+                                                for (int i = 0; i < array.length; i++) { //Go through the array
+                                                    if (Integer.parseInt(array[i][1]) < map.get(value)) { //If the highest vote is less than the map value 
+                                                                                                          //then we put the map value in front of it and set everything back a index
+                                                        for (int y = array.length - 1; y > i; y--) { //Go backwards through the array up to the point we last checked
+                                                            array[y][0] = array[y - 1][0]; // Move the index back one
                                                             array[y][1] = array[y - 1][1];
                                                         }
-                                                        array[i][0] = value;
+                                                        array[i][0] = value; //Insert the new value 
                                                         array[i][1] = Integer.toString(map.get(value));
                                                         break;
                                                     }
                                                 }
                                             }
-                                        }
+                                        }                                      
 
                                         voting = "VOTING IN PROGRESS\n";
                                         for (int z = 0; z < array.length; z++) { 
@@ -234,7 +244,11 @@ public class Netflix extends Application {
                                         Platform.runLater(new Runnable() {
                                             public void run() {
                                                 voteLabel.setText(voting);
-                                                cdTimer.setText("Vote Time: " + countdown + "\nType \"!vote (yourpreferencehere)");
+                                                if(isShow.equals("FALSE")) {
+                                                    cdTimer.setText("Vote Time: " + countdown + "\nType \"!vote yourpreferencehere");
+                                                } else {
+                                                    cdTimer.setText("Vote Time: " + countdown + "\nType \"!vote S0E0");
+                                                }
                                             }
                                         });
                                         
@@ -244,9 +258,17 @@ public class Netflix extends Application {
                                     voting = "PREVIOUS VOTE" + voting.replace("VOTING IN PROGRESS\n", "\n");
                                     if(topVote == null) {
                                         topVote = "null";
+                                    }                                    
+                                    
+                                    if(isShow.equals("FALSE")) {
+                                        setNewNetflix(topVote);
+                                        if(isShow.equals("FALSE")) {
+                                            state = com.mzinck.twitch.State.PLAYING;   
+                                        }
+                                    } else if(isShow.equals("TRUE")){
+                                        nft = nft + "\n" + topVote;
+                                       state = com.mzinck.twitch.State.PLAYING;
                                     }
-                                    setNewNetflix(topVote);
-                                    state = com.mzinck.twitch.State.PLAYING;
                                     
                                     Platform.runLater(new Runnable() {
                                         public void run() {

@@ -48,17 +48,7 @@ public class IRC implements Runnable {
             e.printStackTrace();
         }
     }
-
-    public void recieveComm() {
-        while (true) {
-
-        }
-    }
-
-    public String getText() {
-        return "";
-    }
-
+    
     @Override
     public void run() {
         try {
@@ -77,7 +67,7 @@ public class IRC implements Runnable {
 
             writeLine("PASS oauth:" + OAUTH);
             writeLine("NICK " + NICK);
-            writeLine("JOIN #mitchzinck");
+            writeLine("JOIN #ibuypower");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -102,18 +92,22 @@ public class IRC implements Runnable {
                 e.printStackTrace();
             }
 
-            if (line != null && connected == true && line.contains("!vote")) {
-                line = line.replace("!vote ", "");
+            if (line != null && connected == true) {
+                //line = line.replace("!vote ", "");
                 split = line.split(":");
-                map.put(split[1].split("!")[0], split[split.length - 1]);
+                map.put(split[1].split("!")[0], split[split.length - 1].toUpperCase());
             } else if(connected == true && line != null && (line.contains("!setTime") || line.contains("!newVote"))) {
+                System.out.println(line);
                 for(String s : modList) {
-                    if(line.contains(s)) {
+                    if(line.substring(line.indexOf("@") + 1, line.indexOf(".")).equals(s)) {
                         if(line.contains("!setTime")) {
-                            Netflix.setTime(Integer.parseInt(line.substring(line.indexOf("{") + 1, line.indexOf("}"))));
+                            if(line.contains("{") && line.contains("}")) {
+                                Netflix.setTime(Integer.parseInt(line.substring(line.indexOf("{") + 1, line.indexOf("}"))));
+                            }
                         } else {
                             Netflix.state = State.VOTING;
                             Netflix.countdown = 2;
+                            
                         }
                     }
                 }
