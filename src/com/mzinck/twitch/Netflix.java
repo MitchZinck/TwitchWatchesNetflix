@@ -106,6 +106,7 @@ public class Netflix extends Application {
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_LEFT);
         grid.setHgap(10);
+        grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         Text nfTitle = new Text(nft);
@@ -128,6 +129,13 @@ public class Netflix extends Application {
         cdTimer.setFont(Font.font("Roboto", FontWeight.NORMAL, 24));
         GridPane.setHalignment(cdTimer, HPos.LEFT);
         grid.add(cdTimer, 1, 2);
+        
+        Label twnDesc = new Label("FAQ:\nQ: What is TwitchWatchesNetflix? A: TWN is a stream that cooridnates its users into watching Netflix together!"
+                + "\nQ: How does it work? A: TWN works by asking the users to vote for what they want to watch and then setting up a timestamp so users\n   can "
+                + "sync there devices to the stream and watch Netflix together!");
+        twnDesc.setFont(Font.font("Roboto", FontWeight.NORMAL, 14));
+        GridPane.setHalignment(twnDesc, HPos.LEFT);
+        grid.add(twnDesc, 1, 4);
 
         ImageView nfPoster = new ImageView(poster);
         grid.add(nfPoster, 0, 0, 1, 2);
@@ -187,7 +195,7 @@ public class Netflix extends Application {
                         break;
 
                         case VOTING:
-                            countdown = 500;
+                            countdown = 10;
                             new Thread() {
                                 public void run() {
                                     topVote = "";

@@ -67,7 +67,7 @@ public class IRC implements Runnable {
 
             writeLine("PASS oauth:" + OAUTH);
             writeLine("NICK " + NICK);
-            writeLine("JOIN #ibuypower");
+            writeLine("JOIN #mitchzinck");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -92,8 +92,8 @@ public class IRC implements Runnable {
                 e.printStackTrace();
             }
 
-            if (line != null && connected == true) {
-                //line = line.replace("!vote ", "");
+            if (line != null && connected == true && line.contains("!vote")) {
+                line = line.replace("!vote ", "");
                 split = line.split(":");
                 map.put(split[1].split("!")[0], split[split.length - 1].toUpperCase());
             } else if(connected == true && line != null && (line.contains("!setTime") || line.contains("!newVote"))) {
